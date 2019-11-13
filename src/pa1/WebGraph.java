@@ -9,7 +9,7 @@ public class WebGraph implements Graph {
 
     private HashMap<Integer, ArrayList<TaggedVertex>> adjList = new HashMap<>();
     private HashMap<Integer, ArrayList<TaggedVertex>> incoming = new HashMap<>();
-    private HashSet<TaggedVertex> vertices = new HashSet<>();
+    private HashSet<Integer> vertices = new HashSet<>();
 
     public WebGraph(int size){
         for(int i=0; i<size; i++){
@@ -22,27 +22,28 @@ public class WebGraph implements Graph {
         if(start.getTagValue()>=adjList.size() || end.getTagValue()>=adjList.size()){
             return;
         }
-        if(!vertices.contains(start)) {
+        if(!vertices.contains(start.getTagValue())) {
             ArrayList adj = adjList.get(start.getTagValue());
             ArrayList in = incoming.get(start.getTagValue());
             adj.add(start);
             in.add(start);
-            adjList.put(start.getTagValue(), adj);
-            incoming.put(start.getTagValue(), in);
-            vertices.add(start);
+            adjList.replace(start.getTagValue(), adj);
+            incoming.replace(start.getTagValue(), in);
+            vertices.add(start.getTagValue());
         }
-        if(!vertices.contains(end)) {
+        if(!vertices.contains(end.getTagValue()) && start.getTagValue()!=end.getTagValue()) {
             ArrayList adj = adjList.get(end.getTagValue());
             ArrayList in = incoming.get(end.getTagValue());
             adj.add(end);
             in.add(end);
-            adjList.put(end.getTagValue(), adj);
-            incoming.put(end.getTagValue(), in);
-            vertices.add(end);
+            adjList.replace(end.getTagValue(), adj);
+            incoming.replace(end.getTagValue(), in);
+            vertices.add(end.getTagValue());
         }
         adjList.get(start.getTagValue()).add(end);
         incoming.get(end.getTagValue()).add(start);
     }
+
 
     @Override
     public ArrayList vertexData() {
@@ -83,7 +84,7 @@ public class WebGraph implements Graph {
     @Override
     public List<Integer> getIncoming(int index) {
         List<Integer> list = new ArrayList<>();
-        if(incoming.get(index).size()==0)
+        if(incoming.get(index).size()<=1)
             return list;
         ArrayList<TaggedVertex> vertices = incoming.get(index);
         for(int i=1; i<vertices.size(); i++){

@@ -9,6 +9,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -23,6 +24,7 @@ public class Crawler
 {
   private String seedUrl;
   private int maxDepth, maxPages;
+  private JSoupAPI jSoupAPI;
   /**
    * Constructs a Crawler that will start with the given seed url, including
    * only up to maxPages pages at distance up to maxDepth from the seed url.
@@ -30,11 +32,12 @@ public class Crawler
    * @param maxDepth
    * @param maxPages
    */
-  public Crawler(String seedUrl, int maxDepth, int maxPages)
+  public Crawler(String seedUrl, int maxDepth, int maxPages, JSoupAPI jSoupAPI)
   {
     this.seedUrl = seedUrl;
     this.maxDepth = maxDepth;
     this.maxPages = maxPages;
+    this.jSoupAPI = jSoupAPI;
   }
   
   /**
@@ -52,19 +55,20 @@ public class Crawler
       return webGraph;
     }
 
-    HashSet<String> visited = new HashSet();
-    visited.add(seedUrl);
+    HashMap<String, Integer> visited = new HashMap<>();
+    visited.put(seedUrl, 0);
 
     Queue<String> queue = new LinkedList();
     queue.add(seedUrl);
 
-    int count = 0;
+
+    int count = 1;
     int layer = 0;
     int requestCount = 0;
 
     while(!queue.isEmpty() && layer<=maxDepth) {
       String url = queue.poll();
-      if(requestCount<=50) {
+      if(requestCount>=50) {
         requestCount=0;
         try {
           Thread.sleep(3000);
@@ -72,26 +76,23 @@ public class Crawler
           e.printStackTrace();
         }
       }
-      Document doc = Jsoup.connect(url).get();
       requestCount++;
-      Elements elements = doc.select("a[href]");
-      TaggedVertex parent = new TaggedVertex(url, count);
-      count++;
-      for (Element link : elements) {
-        String v = link.attr("abs:href");
-        if(!Util.ignoreLink(url, v) && !visited.contains(v)){
-          visited.add(v);
-          TaggedVertex vertex = new TaggedVertex(v, count);
+      TaggedVertex parent = new TaggedVertex(url, visited.get(url));
+      String[] links = jSoupAPI.getLinks(url, new PolitenessPolicy());
+      for(String v: links){
+        TaggedVertex vertex = new TaggedVertex(v, count);
+        if(!visited.containsKey(v) && count!=maxPages && layer<maxDepth){
+          visited.put(v, count);
           webGraph.addEdge(parent, vertex);
           queue.add(v);
           count++;
         }
-        if(count==maxPages)
-          return webGraph;
+        else if(visited.containsKey(v) && layer<maxDepth){
+          TaggedVertex endVertex = new TaggedVertex(v, visited.get(v));
+          webGraph.addEdge(parent, endVertex);
+        }
       }
       layer++;
-      if(layer==maxDepth)
-        return webGraph;
     }
 
     return webGraph;
