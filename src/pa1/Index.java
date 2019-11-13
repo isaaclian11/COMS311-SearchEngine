@@ -10,6 +10,8 @@ import api.TaggedVertex;
 import api.Util;
 import org.jsoup.Jsoup;
 
+import javax.swing.text.html.HTML;
+
 /**
  * Implementation of an inverted index for a web graph.
  * 
@@ -20,6 +22,9 @@ public class Index
 
   List<TaggedVertex<String>> urls;
   HashMap<String, HashMap<TaggedVertex, Integer>> list = new HashMap<>();
+  HashMap<String, List<TaggedVertex<String>>> memo = new HashMap<>();
+  HashMap<String, HashMap<String,List<Ranked>>> rankedMemo = new HashMap<>();
+
 
   /**
    * Constructs an index from the given list of urls.  The
@@ -89,6 +94,9 @@ public class Index
   public List<TaggedVertex<String>> search(String w)
   {
     // TODO
+    if(memo.containsKey(w)){
+      return memo.get(w);
+    }
     HashMap<TaggedVertex, Integer> unrankedMap = list.get(w);
     List<Ranked> unrankedList = new ArrayList<>();
     for(TaggedVertex vertex: unrankedMap.keySet()){
@@ -99,6 +107,7 @@ public class Index
     for(int i=0; i<unrankedList.size(); i++){
       output.add(new TaggedVertex<>(unrankedList.get(i).page, i));
     }
+    memo.put(w, output);
     return output;
   }
 
@@ -122,34 +131,7 @@ public class Index
   public List<TaggedVertex<String>> searchWithAnd(String w1, String w2)
   {
     // TODO
-    HashMap<TaggedVertex, Integer> unrankedMapW1 = list.get(w1);
-    HashMap<TaggedVertex, Integer> unrankedMapW2 = list.get(w2);
-
-    HashMap<String, Integer> indicesHolder = new HashMap<>();
-    List<Ranked> combined = new ArrayList<>();
-
-    int i = 0;
-
-    for(TaggedVertex vertex: unrankedMapW1.keySet()){
-      indicesHolder.put((String) vertex.getVertexData(), i);
-      combined.add(new Ranked(vertex.getTagValue(), unrankedMapW1.get(vertex), (String) vertex.getVertexData()));
-      i++;
-    }
-
-    for(TaggedVertex vertex: unrankedMapW2.keySet()){
-      if(indicesHolder.containsKey(vertex.getVertexData())){
-        int index = indicesHolder.get(vertex);
-        combined.get(index).setWc2(unrankedMapW2.get(vertex));
-      }
-      else{
-        Ranked ranked = new Ranked(vertex.getTagValue(), 0, (String) vertex.getVertexData());
-        ranked.setWc2(unrankedMapW2.get(vertex));
-        combined.add(ranked);
-      }
-
-    }
-
-    return null;
+    return twoWords(w1, w2, Operators.AND);
   }
   
   /**
@@ -171,7 +153,7 @@ public class Index
   public List<TaggedVertex<String>> searchWithOr(String w1, String w2)
   {
     // TODO
-    return null;
+    return twoWords(w1, w2, Operators.OR);
   }
   
   /**
@@ -193,8 +175,7 @@ public class Index
   public List<TaggedVertex<String>> searchAndNot(String w1, String w2)
   {
     // TODO
-
-    return null;
+    return twoWords(w1, w2, Operators.NOT);
   }
 
   public void mergeSort(List<Ranked> output, int start,  int end, Operators operator){
@@ -297,6 +278,52 @@ public class Index
         }
       }
     }
+  }
+
+  private List<TaggedVertex<String>> twoWords(String w1, String w2, Operators operators){
+    HashMap<TaggedVertex, Integer> unrankedMapW1 = list.get(w1);
+    HashMap<TaggedVertex, Integer> unrankedMapW2 = list.get(w2);
+
+    HashMap<String, Integer> indicesHolder = new HashMap<>();
+    List<Ranked> combined = new ArrayList<>();
+
+    if(rankedMemo.containsKey(w1)){
+      if(rankedMemo.get(w1).containsKey(w2)){
+        combined = rankedMemo.get(w1).get(w2);
+      }
+      else{
+        int i = 0;
+
+        for(TaggedVertex vertex: unrankedMapW1.keySet()){
+          indicesHolder.put((String) vertex.getVertexData(), i);
+          combined.add(new Ranked(vertex.getTagValue(), unrankedMapW1.get(vertex), (String) vertex.getVertexData()));
+          i++;
+        }
+
+        for(TaggedVertex vertex: unrankedMapW2.keySet()){
+          if(indicesHolder.containsKey(vertex.getVertexData())){
+            int index = indicesHolder.get(vertex);
+            combined.get(index).setWc2(unrankedMapW2.get(vertex));
+          }
+          else{
+            Ranked ranked = new Ranked(vertex.getTagValue(), 0, (String) vertex.getVertexData());
+            ranked.setWc2(unrankedMapW2.get(vertex));
+            combined.add(ranked);
+          }
+        }
+      }
+    }
+    mergeSort(combined, 0, combined.size()-1, operators);
+
+    HashMap<String, List<Ranked>> ranked = new HashMap<>();
+    ranked.put(w2, combined);
+    rankedMemo.put(w1, ranked);
+
+    List<TaggedVertex<String>> output = new ArrayList<>();
+    for(int i=0; i<combined.size(); i++){
+      output.add(new TaggedVertex<>(combined.get(i).page, i));
+    }
+    return output;
   }
 
   private class Ranked{
