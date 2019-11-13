@@ -47,7 +47,7 @@ public class Index
         HashMap<String, Integer> wordCount = new HashMap<>();
         while(scanner.hasNext()){
           String current = scanner.next();
-          if(wordCount.containsKey(current)){
+          if(wordCount.containsKey(current) && !Util.isStopWord(current)){
             int count = wordCount.get(current);
             wordCount.replace(current, count++);
           }
@@ -94,7 +94,7 @@ public class Index
     for(TaggedVertex vertex: unrankedMap.keySet()){
       unrankedList.add(new Ranked(vertex.getTagValue(), unrankedMap.get(vertex), (String) vertex.getVertexData()));
     }
-    mergeSort(unrankedList, 0, unrankedList.size()-1);
+    mergeSort(unrankedList, 0, unrankedList.size()-1, Operators.NONE);
     List<TaggedVertex<String>> output = new ArrayList<>();
     for(int i=0; i<unrankedList.size(); i++){
       output.add(new TaggedVertex<>(unrankedList.get(i).page, i));
@@ -122,6 +122,33 @@ public class Index
   public List<TaggedVertex<String>> searchWithAnd(String w1, String w2)
   {
     // TODO
+    HashMap<TaggedVertex, Integer> unrankedMapW1 = list.get(w1);
+    HashMap<TaggedVertex, Integer> unrankedMapW2 = list.get(w2);
+
+    HashMap<String, Integer> indicesHolder = new HashMap<>();
+    List<Ranked> combined = new ArrayList<>();
+
+    int i = 0;
+
+    for(TaggedVertex vertex: unrankedMapW1.keySet()){
+      indicesHolder.put((String) vertex.getVertexData(), i);
+      combined.add(new Ranked(vertex.getTagValue(), unrankedMapW1.get(vertex), (String) vertex.getVertexData()));
+      i++;
+    }
+
+    for(TaggedVertex vertex: unrankedMapW2.keySet()){
+      if(indicesHolder.containsKey(vertex.getVertexData())){
+        int index = indicesHolder.get(vertex);
+        combined.get(index).setWc2(unrankedMapW2.get(vertex));
+      }
+      else{
+        Ranked ranked = new Ranked(vertex.getTagValue(), 0, (String) vertex.getVertexData());
+        ranked.setWc2(unrankedMapW2.get(vertex));
+        combined.add(ranked);
+      }
+
+    }
+
     return null;
   }
   
@@ -166,19 +193,20 @@ public class Index
   public List<TaggedVertex<String>> searchAndNot(String w1, String w2)
   {
     // TODO
+
     return null;
   }
 
-  public void mergeSort(List<Ranked> output, int start,  int end){
+  public void mergeSort(List<Ranked> output, int start,  int end, Operators operator){
     if(start<end){
       int middle = start+(end-1)/2;
-      mergeSort(output, start, middle);
-      mergeSort(output, middle+1, end);
-      merge(output, start, middle, end);
+      mergeSort(output, start, middle, operator);
+      mergeSort(output, middle+1, end, operator);
+      merge(output, start, middle, end, operator);
     }
   }
 
-  public void merge(List<Ranked> output, int start, int middle, int end){
+  public void merge(List<Ranked> output, int start, int middle, int end, Operators operator){
     int i,j,k;
     int leftSize = middle - start + 1;
     int rightSize = end - middle;
@@ -194,16 +222,80 @@ public class Index
     i = 0;
     j = 0;
     k = 0;
-    while(i<leftSize && j<rightSize){
-      if(left.get(i).indegrees*left.get(i).wc >= right.get(i).indegrees*right.get(i).wc){
-        output.set(k, left.get(i));
-        i++;
+
+    if(operator==Operators.NONE) {
+      while (i < leftSize && j < rightSize) {
+        if (left.get(i).indegrees * left.get(i).wc >= right.get(j).indegrees * right.get(j).wc) {
+          output.set(k, left.get(i));
+          i++;
+        } else {
+          output.set(k, right.get(j));
+          j++;
+        }
+        k++;
       }
-      else{
-        output.set(k, right.get(j));
-        j++;
+    }
+    else if(operator==Operators.AND){
+      while (i < leftSize && j < rightSize) {
+        if(left.get(i).wc==0 || left.get(i).wc2==0 && (right.get(j).wc!=0 || right.get(j).wc2!=0)){
+          output.set(k, right.get(i));
+          i++;
+        }
+        else if(right.get(j).wc==0 || right.get(j).wc2==0 && (left.get(i).wc!=0 || left.get(i).wc2!=0)){
+          output.set(k, left.get(i));
+          j++;
+        }
+        else if(left.get(i).indegrees*left.get(i).wc + left.get(i).indegrees*left.get(i).wc2 >=
+                right.get(j).indegrees*right.get(j).wc + right.get(j).indegrees*right.get(j).wc2){
+          output.set(k, left.get(i));
+          i++;
+        }
+        else{
+          output.set(k, right.get(j));
+          j++;
+        }
       }
-      k++;
+    }
+    else if(operator==Operators.OR){
+      while (i < leftSize && j < rightSize) {
+        if(left.get(i).wc==0 && left.get(i).wc2==0 && (right.get(j).wc!=0 && right.get(j).wc2!=0)){
+          output.set(k, right.get(i));
+          i++;
+        }
+        else if(right.get(j).wc==0 && right.get(j).wc2==0 && (left.get(i).wc!=0 && left.get(i).wc2!=0)){
+          output.set(k, left.get(i));
+          j++;
+        }
+        else if(left.get(i).indegrees*left.get(i).wc + left.get(i).indegrees*left.get(i).wc2 >=
+                right.get(j).indegrees*right.get(j).wc + right.get(j).indegrees*right.get(j).wc2){
+          output.set(k, left.get(i));
+          i++;
+        }
+        else{
+          output.set(k, right.get(j));
+          j++;
+        }
+      }
+    }
+    else if(operator==Operators.NOT){
+      while (i < leftSize && j < rightSize) {
+        if(left.get(i).wc==0 && left.get(i).wc2!=0 && !(right.get(j).wc==0 && right.get(j).wc2!=0)){
+          output.set(k, right.get(i));
+          i++;
+        }
+        else if(right.get(j).wc==0 && right.get(j).wc2!=0 && !(left.get(i).wc==0 && left.get(i).wc2!=0)){
+          output.set(k, left.get(i));
+          j++;
+        }
+        else if(left.get(i).indegrees*left.get(i).wc >= right.get(j).indegrees*right.get(j).wc){
+          output.set(k, left.get(i));
+          i++;
+        }
+        else{
+          output.set(k, right.get(j));
+          j++;
+        }
+      }
     }
   }
 
@@ -211,11 +303,25 @@ public class Index
     int indegrees;
     int wc;
     String page;
+    int wc2;
 
     public Ranked(int indegrees, int wc, String page) {
       this.indegrees = indegrees;
       this.wc = wc;
+      this.page = page;
     }
+
+    public void setWc2(int wc2){
+      this.wc2 = wc2;
+    }
+
+  }
+
+  private enum Operators{
+    NONE,
+    AND,
+    OR,
+    NOT
   }
 
 }
