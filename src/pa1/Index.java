@@ -1,16 +1,31 @@
 package pa1;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Scanner;
 
 import api.TaggedVertex;
+import api.Util;
+import org.jsoup.Jsoup;
+
+import javax.swing.text.html.HTML;
 
 /**
  * Implementation of an inverted index for a web graph.
  * 
- * @author PLEASE FILL IN TEAM MEMBER NAMES HERE
+ * @author Isaac Sanga, Justin Worley
  */
 public class Index
 {
+
+  List<TaggedVertex<String>> urls;
+  HashMap<String, HashMap<TaggedVertex, Integer>> list = new HashMap<>();
+  HashMap<String, List<TaggedVertex<String>>> memo = new HashMap<>();
+  HashMap<String, HashMap<String,List<Ranked>>> rankedMemo = new HashMap<>();
+
+
   /**
    * Constructs an index from the given list of urls.  The
    * tag value for each url is the indegree of the corresponding
@@ -20,7 +35,7 @@ public class Index
    */
   public Index(List<TaggedVertex<String>> urls)
   {
-    
+    this.urls = urls;
   }
   
   /**
@@ -29,6 +44,39 @@ public class Index
   public void makeIndex()
   {
     // TODO
+    for(TaggedVertex vertex: urls){
+      try {
+        String url = (String) vertex.getVertexData();
+        String body = Jsoup.connect(url).get().body().text();
+        Scanner scanner = new Scanner(body);
+        HashMap<String, Integer> wordCount = new HashMap<>();
+        while(scanner.hasNext()){
+          String current = scanner.next();
+          if(wordCount.containsKey(current) && !Util.isStopWord(current)){
+            int count = wordCount.get(current);
+            wordCount.replace(current, count++);
+          }
+          else{
+            wordCount.put(current, 1);
+          }
+          if(!Util.isStopWord(current)){
+            if(list.containsKey(current)){
+              if(!list.get(current).containsKey(vertex))
+                list.get(current).put(vertex, 1);
+              else
+                list.get(current).replace(vertex, wordCount.get(current));
+            }
+            else {
+              HashMap<TaggedVertex, Integer> map = new HashMap<>();
+              map.put(vertex, 1);
+              list.put(current, map);
+            }
+          }
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
   }
   
   /**
@@ -46,7 +94,21 @@ public class Index
   public List<TaggedVertex<String>> search(String w)
   {
     // TODO
-    return null;
+    if(memo.containsKey(w)){
+      return memo.get(w);
+    }
+    HashMap<TaggedVertex, Integer> unrankedMap = list.get(w);
+    List<Ranked> unrankedList = new ArrayList<>();
+    for(TaggedVertex vertex: unrankedMap.keySet()){
+      unrankedList.add(new Ranked(vertex.getTagValue(), unrankedMap.get(vertex), (String) vertex.getVertexData()));
+    }
+    mergeSort(unrankedList, 0, unrankedList.size()-1, Operators.NONE);
+    List<TaggedVertex<String>> output = new ArrayList<>();
+    for(int i=0; i<unrankedList.size(); i++){
+      output.add(new TaggedVertex<>(unrankedList.get(i).page, i));
+    }
+    memo.put(w, output);
+    return output;
   }
 
 
@@ -69,7 +131,7 @@ public class Index
   public List<TaggedVertex<String>> searchWithAnd(String w1, String w2)
   {
     // TODO
-    return null;
+    return twoWords(w1, w2, Operators.AND);
   }
   
   /**
@@ -91,7 +153,7 @@ public class Index
   public List<TaggedVertex<String>> searchWithOr(String w1, String w2)
   {
     // TODO
-    return null;
+    return twoWords(w1, w2, Operators.OR);
   }
   
   /**
@@ -113,6 +175,180 @@ public class Index
   public List<TaggedVertex<String>> searchAndNot(String w1, String w2)
   {
     // TODO
-    return null;
+    return twoWords(w1, w2, Operators.NOT);
   }
+
+  public void mergeSort(List<Ranked> output, int start,  int end, Operators operator){
+    if(start<end){
+      int middle = start+(end-1)/2;
+      mergeSort(output, start, middle, operator);
+      mergeSort(output, middle+1, end, operator);
+      merge(output, start, middle, end, operator);
+    }
+  }
+
+  public void merge(List<Ranked> output, int start, int middle, int end, Operators operator){
+    int i,j,k;
+    int leftSize = middle - start + 1;
+    int rightSize = end - middle;
+    ArrayList<Ranked> left = new ArrayList<>();
+    ArrayList<Ranked> right = new ArrayList<>();
+
+    for (i=0; i<leftSize; i++){
+      left.set(i, output.get(start+i));
+    }
+    for(j=0; j<rightSize; j++){
+      right.set(j, output.get(middle+start+j));
+    }
+    i = 0;
+    j = 0;
+    k = 0;
+
+    if(operator==Operators.NONE) {
+      while (i < leftSize && j < rightSize) {
+        if (left.get(i).indegrees * left.get(i).wc >= right.get(j).indegrees * right.get(j).wc) {
+          output.set(k, left.get(i));
+          i++;
+        } else {
+          output.set(k, right.get(j));
+          j++;
+        }
+        k++;
+      }
+    }
+    else if(operator==Operators.AND){
+      while (i < leftSize && j < rightSize) {
+        if(left.get(i).wc==0 || left.get(i).wc2==0 && (right.get(j).wc!=0 || right.get(j).wc2!=0)){
+          output.set(k, right.get(i));
+          i++;
+        }
+        else if(right.get(j).wc==0 || right.get(j).wc2==0 && (left.get(i).wc!=0 || left.get(i).wc2!=0)){
+          output.set(k, left.get(i));
+          j++;
+        }
+        else if(left.get(i).indegrees*left.get(i).wc + left.get(i).indegrees*left.get(i).wc2 >=
+                right.get(j).indegrees*right.get(j).wc + right.get(j).indegrees*right.get(j).wc2){
+          output.set(k, left.get(i));
+          i++;
+        }
+        else{
+          output.set(k, right.get(j));
+          j++;
+        }
+      }
+    }
+    else if(operator==Operators.OR){
+      while (i < leftSize && j < rightSize) {
+        if(left.get(i).wc==0 && left.get(i).wc2==0 && (right.get(j).wc!=0 && right.get(j).wc2!=0)){
+          output.set(k, right.get(i));
+          i++;
+        }
+        else if(right.get(j).wc==0 && right.get(j).wc2==0 && (left.get(i).wc!=0 && left.get(i).wc2!=0)){
+          output.set(k, left.get(i));
+          j++;
+        }
+        else if(left.get(i).indegrees*left.get(i).wc + left.get(i).indegrees*left.get(i).wc2 >=
+                right.get(j).indegrees*right.get(j).wc + right.get(j).indegrees*right.get(j).wc2){
+          output.set(k, left.get(i));
+          i++;
+        }
+        else{
+          output.set(k, right.get(j));
+          j++;
+        }
+      }
+    }
+    else if(operator==Operators.NOT){
+      while (i < leftSize && j < rightSize) {
+        if(left.get(i).wc==0 && left.get(i).wc2!=0 && !(right.get(j).wc==0 && right.get(j).wc2!=0)){
+          output.set(k, right.get(i));
+          i++;
+        }
+        else if(right.get(j).wc==0 && right.get(j).wc2!=0 && !(left.get(i).wc==0 && left.get(i).wc2!=0)){
+          output.set(k, left.get(i));
+          j++;
+        }
+        else if(left.get(i).indegrees*left.get(i).wc >= right.get(j).indegrees*right.get(j).wc){
+          output.set(k, left.get(i));
+          i++;
+        }
+        else{
+          output.set(k, right.get(j));
+          j++;
+        }
+      }
+    }
+  }
+
+  private List<TaggedVertex<String>> twoWords(String w1, String w2, Operators operators){
+    HashMap<TaggedVertex, Integer> unrankedMapW1 = list.get(w1);
+    HashMap<TaggedVertex, Integer> unrankedMapW2 = list.get(w2);
+
+    HashMap<String, Integer> indicesHolder = new HashMap<>();
+    List<Ranked> combined = new ArrayList<>();
+
+    if(rankedMemo.containsKey(w1)){
+      if(rankedMemo.get(w1).containsKey(w2)){
+        combined = rankedMemo.get(w1).get(w2);
+      }
+      else{
+        int i = 0;
+
+        for(TaggedVertex vertex: unrankedMapW1.keySet()){
+          indicesHolder.put((String) vertex.getVertexData(), i);
+          combined.add(new Ranked(vertex.getTagValue(), unrankedMapW1.get(vertex), (String) vertex.getVertexData()));
+          i++;
+        }
+
+        for(TaggedVertex vertex: unrankedMapW2.keySet()){
+          if(indicesHolder.containsKey(vertex.getVertexData())){
+            int index = indicesHolder.get(vertex);
+            combined.get(index).setWc2(unrankedMapW2.get(vertex));
+          }
+          else{
+            Ranked ranked = new Ranked(vertex.getTagValue(), 0, (String) vertex.getVertexData());
+            ranked.setWc2(unrankedMapW2.get(vertex));
+            combined.add(ranked);
+          }
+        }
+      }
+    }
+    mergeSort(combined, 0, combined.size()-1, operators);
+
+    HashMap<String, List<Ranked>> ranked = new HashMap<>();
+    ranked.put(w2, combined);
+    rankedMemo.put(w1, ranked);
+
+    List<TaggedVertex<String>> output = new ArrayList<>();
+    for(int i=0; i<combined.size(); i++){
+      output.add(new TaggedVertex<>(combined.get(i).page, i));
+    }
+    return output;
+  }
+
+  private class Ranked{
+    int indegrees;
+    int wc;
+    String page;
+    int wc2;
+
+    public Ranked(int indegrees, int wc, String page) {
+      this.indegrees = indegrees;
+      this.wc = wc;
+      this.page = page;
+    }
+
+    public void setWc2(int wc2){
+      this.wc2 = wc2;
+    }
+
+  }
+
+  private enum Operators{
+    NONE,
+    AND,
+    OR,
+    NOT
+  }
+
 }

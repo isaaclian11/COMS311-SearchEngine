@@ -8,6 +8,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="jsoup-1.12.1" level="project" />
+<<<<<<< HEAD
     <orderEntry type="module-library">
       <library name="JUnit4">
         <CLASSES>
@@ -19,5 +20,7 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="mockito-all-1.10.19" level="project" />
+=======
+>>>>>>> Index
   </component>
 </module>
