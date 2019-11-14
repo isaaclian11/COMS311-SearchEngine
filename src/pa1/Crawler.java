@@ -24,7 +24,7 @@ public class Crawler
 {
   private String seedUrl;
   private int maxDepth, maxPages;
-  private JSoupAPI jSoupAPI;
+  JSoupAPI jSoupAPI;
   /**
    * Constructs a Crawler that will start with the given seed url, including
    * only up to maxPages pages at distance up to maxDepth from the seed url.
@@ -32,12 +32,12 @@ public class Crawler
    * @param maxDepth
    * @param maxPages
    */
-  public Crawler(String seedUrl, int maxDepth, int maxPages, JSoupAPI jSoupAPI)
+  public Crawler(String seedUrl, int maxDepth, int maxPages)
   {
     this.seedUrl = seedUrl;
     this.maxDepth = maxDepth;
     this.maxPages = maxPages;
-    this.jSoupAPI = jSoupAPI;
+    this.jSoupAPI = new JSoupAPI();
   }
   
   /**
@@ -47,7 +47,7 @@ public class Crawler
    * @return
    *   an instance of Graph representing this portion of the web
    */
-  public Graph<String> crawl() throws IOException {
+  public Graph<String> crawl(){
     // TODO
 
     WebGraph webGraph = new WebGraph(maxPages);
@@ -60,7 +60,7 @@ public class Crawler
 
     Queue<String> queue = new LinkedList();
     queue.add(seedUrl);
-
+    queue.add(null); //Separates depth
 
     int count = 1;
     int layer = 0;
@@ -68,31 +68,38 @@ public class Crawler
 
     while(!queue.isEmpty() && layer<=maxDepth) {
       String url = queue.poll();
-      if(requestCount>=50) {
-        requestCount=0;
-        try {
-          Thread.sleep(3000);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
+      if (url == null) {
+        layer++;
+        queue.add(null);
+        if(queue.peek()==null)
+          break;
+        else
+          continue;
+      } else{
+        if (requestCount >= 50) {
+          requestCount = 0;
+          try {
+            Thread.sleep(3000);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        }
+        requestCount++;
+        TaggedVertex parent = new TaggedVertex(url, visited.get(url));
+        String[] links = jSoupAPI.getLinks(url, new PolitenessPolicy());
+        for (String v : links) {
+          TaggedVertex vertex = new TaggedVertex(v, count);
+          if (!visited.containsKey(v) && count != maxPages && layer < maxDepth) {
+            visited.put(v, count);
+            webGraph.addEdge(parent, vertex);
+            queue.add(v);
+            count++;
+          } else if (visited.containsKey(v) && layer < maxDepth) {
+            TaggedVertex endVertex = new TaggedVertex(v, visited.get(v));
+            webGraph.addEdge(parent, endVertex);
+          }
         }
       }
-      requestCount++;
-      TaggedVertex parent = new TaggedVertex(url, visited.get(url));
-      String[] links = jSoupAPI.getLinks(url, new PolitenessPolicy());
-      for(String v: links){
-        TaggedVertex vertex = new TaggedVertex(v, count);
-        if(!visited.containsKey(v) && count!=maxPages && layer<maxDepth){
-          visited.put(v, count);
-          webGraph.addEdge(parent, vertex);
-          queue.add(v);
-          count++;
-        }
-        else if(visited.containsKey(v) && layer<maxDepth){
-          TaggedVertex endVertex = new TaggedVertex(v, visited.get(v));
-          webGraph.addEdge(parent, endVertex);
-        }
-      }
-      layer++;
     }
 
     return webGraph;

@@ -10,7 +10,6 @@ import api.TaggedVertex;
 import api.Util;
 import org.jsoup.Jsoup;
 
-import javax.swing.text.html.HTML;
 
 /**
  * Implementation of an inverted index for a web graph.
@@ -24,7 +23,7 @@ public class Index
   HashMap<String, HashMap<TaggedVertex, Integer>> list = new HashMap<>();
   HashMap<String, List<TaggedVertex<String>>> memo = new HashMap<>();
   HashMap<String, HashMap<String,List<Ranked>>> rankedMemo = new HashMap<>();
-
+  JSoupAPI jSoupAPI;
 
   /**
    * Constructs an index from the given list of urls.  The
@@ -36,6 +35,7 @@ public class Index
   public Index(List<TaggedVertex<String>> urls)
   {
     this.urls = urls;
+    jSoupAPI = new JSoupAPI();
   }
   
   /**
@@ -45,16 +45,17 @@ public class Index
   {
     // TODO
     for(TaggedVertex vertex: urls){
-      try {
         String url = (String) vertex.getVertexData();
-        String body = Jsoup.connect(url).get().body().text();
+        String body = jSoupAPI.getBody(url);
         Scanner scanner = new Scanner(body);
         HashMap<String, Integer> wordCount = new HashMap<>();
         while(scanner.hasNext()){
           String current = scanner.next();
+          current = Util.stripPunctuation(current);
           if(wordCount.containsKey(current) && !Util.isStopWord(current)){
             int count = wordCount.get(current);
-            wordCount.replace(current, count++);
+            count++;
+            wordCount.replace(current, count);
           }
           else{
             wordCount.put(current, 1);
@@ -73,9 +74,6 @@ public class Index
             }
           }
         }
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
     }
   }
   
@@ -97,6 +95,7 @@ public class Index
     if(memo.containsKey(w)){
       return memo.get(w);
     }
+    w = Util.stripPunctuation(w);
     HashMap<TaggedVertex, Integer> unrankedMap = list.get(w);
     List<Ranked> unrankedList = new ArrayList<>();
     for(TaggedVertex vertex: unrankedMap.keySet()){
@@ -180,7 +179,7 @@ public class Index
 
   public void mergeSort(List<Ranked> output, int start,  int end, Operators operator){
     if(start<end){
-      int middle = start+(end-1)/2;
+      int middle = start+(end-start)/2;
       mergeSort(output, start, middle, operator);
       mergeSort(output, middle+1, end, operator);
       merge(output, start, middle, end, operator);
@@ -195,14 +194,14 @@ public class Index
     ArrayList<Ranked> right = new ArrayList<>();
 
     for (i=0; i<leftSize; i++){
-      left.set(i, output.get(start+i));
+      left.add(output.get(start+i));
     }
     for(j=0; j<rightSize; j++){
-      right.set(j, output.get(middle+start+j));
+      right.add(output.get(middle+1+j));
     }
     i = 0;
     j = 0;
-    k = 0;
+    k = start;
 
     if(operator==Operators.NONE) {
       while (i < leftSize && j < rightSize) {
@@ -236,6 +235,16 @@ public class Index
           j++;
         }
       }
+      while(i<leftSize){
+        output.set(k, left.get(i));
+        i++;
+        k++;
+      }
+      while(j<rightSize){
+        output.set(k, right.get(j));
+        j++;
+        k++;
+      }
     }
     else if(operator==Operators.OR){
       while (i < leftSize && j < rightSize) {
@@ -257,6 +266,16 @@ public class Index
           j++;
         }
       }
+      while(i<leftSize){
+        output.set(k, left.get(i));
+        i++;
+        k++;
+      }
+      while(j<rightSize){
+        output.set(k, right.get(j));
+        j++;
+        k++;
+      }
     }
     else if(operator==Operators.NOT){
       while (i < leftSize && j < rightSize) {
@@ -277,6 +296,16 @@ public class Index
           j++;
         }
       }
+    }
+    while(i<leftSize){
+      output.set(k, left.get(i));
+      i++;
+      k++;
+    }
+    while(j<rightSize){
+      output.set(k, right.get(j));
+      j++;
+      k++;
     }
   }
 
@@ -343,6 +372,8 @@ public class Index
     }
 
   }
+
+
 
   private enum Operators{
     NONE,
