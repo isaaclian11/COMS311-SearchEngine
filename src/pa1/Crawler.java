@@ -2,8 +2,10 @@ package pa1;
 
 import api.Graph;
 import api.TaggedVertex;
+import api.Util;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -42,7 +44,6 @@ public class Crawler
    */
   public Graph<String> crawl(){
     // TODO
-
     WebGraph webGraph = new WebGraph(maxPages);
     if(maxPages==0){
       return webGraph;
@@ -77,7 +78,7 @@ public class Crawler
             webGraph.addEdge(parent, vertex);
             queue.add(v);
             count++;
-          } else if (visited.containsKey(v) && layer < maxDepth) {
+          } else if(visited.containsKey(v)) {
             TaggedVertex endVertex = new TaggedVertex(v, visited.get(v));
             webGraph.addEdge(parent, endVertex);
           }
@@ -87,7 +88,6 @@ public class Crawler
 
     return webGraph;
   }
-
 
 
 }

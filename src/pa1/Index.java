@@ -319,7 +319,7 @@ public class Index
       }
       else if(operators==Operators.NOT){
         for (int k = combined.size() - 1; k >= 0; k--) {
-          if (combined.get(k).wc == 0 && combined.get(k).wc2 != 0) {
+          if (combined.get(k).wc == 0 || combined.get(k).wc2 != 0) {
             combined.remove(k);
           }
         }
