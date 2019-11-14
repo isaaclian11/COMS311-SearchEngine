@@ -220,7 +220,8 @@ public class CrawlerJUnit {
         TaggedVertex<String> j = new TaggedVertex<>("J", 1);
 
         ArrayList<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(a,b,c,d,i,j));
-        
+
+        //Tests incoming counts
         for(int index=0; index<expected.size(); index++){
             System.out.println("Testing " + index);
             assertEquals(expected.get(index).getTagValue(), actual.get(index).getTagValue());
@@ -257,6 +258,7 @@ public class CrawlerJUnit {
 
         ArrayList<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(a,b,c,d,i,j,e,f,g,h));
 
+        //Tests whether the graph returns the correct vertices with the right incoming counts
         for(int index=0; index<expected.size(); index++){
             System.out.println("Testing " + index);
             assertEquals(expected.get(index).getTagValue(), actual.get(index).getTagValue());
@@ -293,8 +295,9 @@ public class CrawlerJUnit {
         List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(f,g,i,j));
         List<TaggedVertex<String>> actual = testIndex.search("bottle");
 
+        //Should return f,g,i,j in that order
         for(int index=0; index<expected.size(); index++){
-            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData()); //Should return f,g,i,j in that order
+            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData());
         }
 
     }
@@ -318,8 +321,9 @@ public class CrawlerJUnit {
         List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(a));
         List<TaggedVertex<String>> actual = testIndex.search("hello");
 
+        //Should just return a
         for(int index=0; index<expected.size(); index++){
-            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData()); //Should just return a
+            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData());
         }
 
     }
@@ -398,8 +402,9 @@ public class CrawlerJUnit {
         List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(f,g,i));
         List<TaggedVertex<String>> actual = testIndex.searchWithAnd("bottle", "happy");
 
+        //Should return f,g,i in that order
         for(int index=0; index<expected.size(); index++){
-            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData()); //Should return f,g,i in that order
+            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData());
         }
 
     }
@@ -431,8 +436,9 @@ public class CrawlerJUnit {
         List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(a,b,c,d,g,i,j,h));
         List<TaggedVertex<String>> actual = testIndex.searchWithOr("bottle", "happy");
 
+        //Should return a,b,c,d,g,i,j,h in that order
         for(int index=0; index<expected.size(); index++){
-            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData()); //Should return f,g,i in that order
+            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData());
         }
 
     }
@@ -465,7 +471,7 @@ public class CrawlerJUnit {
         List<TaggedVertex<String>> actual = testIndex.searchAndNot("bottle", "happy");
 
         for(int index=0; index<expected.size(); index++){
-            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData()); //Should return f,g,i in that order
+            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData()); //Should return just j
         }
 
     }
