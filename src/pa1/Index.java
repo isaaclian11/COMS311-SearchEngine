@@ -318,25 +318,25 @@ public class Index
       if(rankedMemo.get(w1).containsKey(w2)){
         combined = rankedMemo.get(w1).get(w2);
       }
-      else{
-        int i = 0;
+    }
+    else{
+      int i = 0;
 
-        for(TaggedVertex vertex: unrankedMapW1.keySet()){
-          indicesHolder.put((String) vertex.getVertexData(), i);
-          combined.add(new Ranked(vertex.getTagValue(), unrankedMapW1.get(vertex), (String) vertex.getVertexData()));
-          i++;
+      for(TaggedVertex vertex: unrankedMapW1.keySet()){
+        indicesHolder.put((String) vertex.getVertexData(), i);
+        combined.add(new Ranked(vertex.getTagValue(), unrankedMapW1.get(vertex), (String) vertex.getVertexData()));
+        i++;
+      }
+
+      for(TaggedVertex vertex: unrankedMapW2.keySet()){
+        if(indicesHolder.containsKey(vertex.getVertexData())){
+          int index = indicesHolder.get(vertex.getVertexData());
+          combined.get(index).setWc2(unrankedMapW2.get(vertex));
         }
-
-        for(TaggedVertex vertex: unrankedMapW2.keySet()){
-          if(indicesHolder.containsKey(vertex.getVertexData())){
-            int index = indicesHolder.get(vertex);
-            combined.get(index).setWc2(unrankedMapW2.get(vertex));
-          }
-          else{
-            Ranked ranked = new Ranked(vertex.getTagValue(), 0, (String) vertex.getVertexData());
-            ranked.setWc2(unrankedMapW2.get(vertex));
-            combined.add(ranked);
-          }
+        else{
+          Ranked ranked = new Ranked(vertex.getTagValue(), 0, (String) vertex.getVertexData());
+          ranked.setWc2(unrankedMapW2.get(vertex));
+          combined.add(ranked);
         }
       }
     }

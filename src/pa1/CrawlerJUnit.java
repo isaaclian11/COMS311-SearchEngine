@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -54,27 +53,35 @@ public class CrawlerJUnit {
 
         body = new ArrayList<>();
 
-        body.add("Hello, this is a test");                        //A
+        body.add("Hello, this is a test happy happy happy " +
+                "happy happy happy happy happy happy happy");                      //A
 
-        body.add("graph graph graph graph");                      //B
+        body.add("graph graph graph graph happy happy happy " +
+                "happy happy happy happy happy");                                  //B
 
-        body.add("The an a in of");                               //C
+        body.add("The an a in of happy happy happy " +
+                "happy happy happy happy");                                        //C
 
         body.add("One one one one tasks " +
-                "tasks tasks tasks");                             //D
+                "tasks tasks tasks happy happy " +
+                "happy happy happy");                                              //D
 
-        body.add("A; bunch. of, (punctuation)");                  //E
+        body.add("A; bunch. of, (punctuation)");                                   //E
+
         body.add("When searching bottle, this " +
                 "should be the first result " +
-                "bottle bottle bottle bottle bottle bottle bottle");     //F
+                "bottle bottle bottle bottle " +
+                "bottle bottle bottle " +
+                "happy happy happy happy");                                        //F
 
         body.add("When searching bottle, this " +
                 "should be the second result " +
-                "bottle bottle bottle bottle");                    //G
+                "bottle bottle bottle bottle " +
+                "happy happy happy");                                              //G
 
-        body.add("Other random words");                            //H
-        body.add("bottle Bottle BoTTle BottlE");                   //I
-        body.add("bottle bottle bottle");                          //J
+        body.add("Other random words happy happy");                                //H
+        body.add("bottle Bottle BoTTle BottlE happy");                             //I
+        body.add("bottle bottle bottle");                                          //J
 
 
 
@@ -258,6 +265,7 @@ public class CrawlerJUnit {
 
     }
 
+    //Tests if output is correctly ranked
     @Test
     public void searchTest(){
 
@@ -291,8 +299,80 @@ public class CrawlerJUnit {
 
     }
 
+    //Tests if word in root page gets searched
     @Test
     public void searchTest2(){
+
+        TaggedVertex<String> a = new TaggedVertex<>("A", 0);
+
+        ArrayList<TaggedVertex<String>> urls = new ArrayList<>(Arrays.asList(a));
+
+        Index testIndex = new Index(urls);
+        testIndex.jSoupAPI = jsoupMock;
+
+        when(jsoupMock.getBody(anyString())).thenAnswer(
+                (Answer<String>) invoc -> getFakeBody((String) invoc.getArguments()[0]));
+
+        testIndex.makeIndex();
+
+        List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(a));
+        List<TaggedVertex<String>> actual = testIndex.search("hello");
+
+        for(int index=0; index<expected.size(); index++){
+            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData()); //Should just return a
+        }
+
+    }
+
+    @Test
+    public void searchTest3(){
+
+        String seed = "A";
+        Crawler crawler = new Crawler(seed, 4, 11);
+        crawler.jSoupAPI = jsoupMock;
+        List<String> finalGraph = new ArrayList<>(Arrays.asList(
+                "A", "B", "C", "D", "I", "J", "E", "F", "G", "H"
+        ));
+
+        //Replace normal JSoupAPI calls to actual webpages with our fake stuff below
+        when(jsoupMock.getLinks(anyString())).thenAnswer(
+                (Answer<String[]>) invoc -> getFakeLinkLists((String) invoc.getArguments()[0]));
+
+        Graph<String> graph = crawler.crawl();
+        assertEquals(graph.vertexData(), finalGraph);
+
+        ArrayList<TaggedVertex<String>> urls = graph.vertexDataWithIncomingCounts();
+
+        Index testIndex = new Index(urls);
+        testIndex.jSoupAPI = jsoupMock;
+
+        when(jsoupMock.getBody(anyString())).thenAnswer(
+                (Answer<String>) invoc -> getFakeBody((String) invoc.getArguments()[0]));
+
+        testIndex.makeIndex();
+
+        TaggedVertex<String> a = new TaggedVertex<>("A", 2);
+        TaggedVertex<String> b = new TaggedVertex<>("B", 2);
+        TaggedVertex<String> c = new TaggedVertex<>("C", 2);
+        TaggedVertex<String> d = new TaggedVertex<>("D", 2);
+        TaggedVertex<String> e = new TaggedVertex<>("E", 1);
+        TaggedVertex<String> f = new TaggedVertex<>("F", 1);
+        TaggedVertex<String> g = new TaggedVertex<>("G", 1);
+        TaggedVertex<String> h = new TaggedVertex<>("H", 1);
+        TaggedVertex<String> i = new TaggedVertex<>("I", 1);
+
+        List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(a,b,c,d,f,g,h,i));
+        List<TaggedVertex<String>> actual = testIndex.search("happy");
+
+        for(int index=0; index<expected.size(); index++){
+            //Should return a,b,c,d,e,f,g,h,i in that order
+            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData());
+        }
+
+    }
+
+    @Test
+    public void searchANDTest(){
 
         TaggedVertex<String> a = new TaggedVertex<>("A", 2);
         TaggedVertex<String> b = new TaggedVertex<>("B", 2);
@@ -315,11 +395,11 @@ public class CrawlerJUnit {
 
         testIndex.makeIndex();
 
-        List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(f,g,i,j));
-        List<TaggedVertex<String>> actual = testIndex.search("bottle");
+        List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(f,g,i));
+        List<TaggedVertex<String>> actual = testIndex.searchWithAnd("bottle", "happy");
 
         for(int index=0; index<expected.size(); index++){
-            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData()); //Should return f,g,i,j in that order
+            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData()); //Should return f,g,i in that order
         }
 
     }
