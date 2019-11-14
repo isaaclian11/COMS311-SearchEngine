@@ -128,7 +128,9 @@ public class Index
   public List<TaggedVertex<String>> searchWithAnd(String w1, String w2)
   {
     // TODO
-    return twoWords(w1, w2, Operators.AND);
+    List<TaggedVertex<String>> output = twoWords(w1, w2, Operators.AND);
+
+    return output;
   }
   
   /**
@@ -212,27 +214,6 @@ public class Index
         }
         k++;
       }
-    }
-    else if(operator==Operators.AND){
-      while (i < leftSize && j < rightSize) {
-        if(left.get(i).wc==0 || left.get(i).wc2==0 && (right.get(j).wc!=0 || right.get(j).wc2!=0)){
-          output.set(k, right.get(i));
-          i++;
-        }
-        else if(right.get(j).wc==0 || right.get(j).wc2==0 && (left.get(i).wc!=0 || left.get(i).wc2!=0)){
-          output.set(k, left.get(i));
-          j++;
-        }
-        else if(left.get(i).indegrees*left.get(i).wc + left.get(i).indegrees*left.get(i).wc2 >=
-                right.get(j).indegrees*right.get(j).wc + right.get(j).indegrees*right.get(j).wc2){
-          output.set(k, left.get(i));
-          i++;
-        }
-        else{
-          output.set(k, right.get(j));
-          j++;
-        }
-      }
       while(i<leftSize){
         output.set(k, left.get(i));
         i++;
@@ -244,17 +225,9 @@ public class Index
         k++;
       }
     }
-    else if(operator==Operators.OR){
+    else if(operator==Operators.AND || operator==Operators.OR){
       while (i < leftSize && j < rightSize) {
-        if(left.get(i).wc==0 && left.get(i).wc2==0 && (right.get(j).wc!=0 && right.get(j).wc2!=0)){
-          output.set(k, right.get(i));
-          i++;
-        }
-        else if(right.get(j).wc==0 && right.get(j).wc2==0 && (left.get(i).wc!=0 && left.get(i).wc2!=0)){
-          output.set(k, left.get(i));
-          j++;
-        }
-        else if(left.get(i).indegrees*left.get(i).wc + left.get(i).indegrees*left.get(i).wc2 >=
+        if(left.get(i).indegrees*left.get(i).wc + left.get(i).indegrees*left.get(i).wc2 >=
                 right.get(j).indegrees*right.get(j).wc + right.get(j).indegrees*right.get(j).wc2){
           output.set(k, left.get(i));
           i++;
@@ -263,6 +236,7 @@ public class Index
           output.set(k, right.get(j));
           j++;
         }
+        k++;
       }
       while(i<leftSize){
         output.set(k, left.get(i));
@@ -277,15 +251,7 @@ public class Index
     }
     else if(operator==Operators.NOT){
       while (i < leftSize && j < rightSize) {
-        if(left.get(i).wc==0 && left.get(i).wc2!=0 && !(right.get(j).wc==0 && right.get(j).wc2!=0)){
-          output.set(k, right.get(i));
-          i++;
-        }
-        else if(right.get(j).wc==0 && right.get(j).wc2!=0 && !(left.get(i).wc==0 && left.get(i).wc2!=0)){
-          output.set(k, left.get(i));
-          j++;
-        }
-        else if(left.get(i).indegrees*left.get(i).wc >= right.get(j).indegrees*right.get(j).wc){
+        if(left.get(i).indegrees*left.get(i).wc >= right.get(j).indegrees*right.get(j).wc){
           output.set(k, left.get(i));
           i++;
         }
@@ -294,6 +260,7 @@ public class Index
           j++;
         }
       }
+      k++;
     }
     while(i<leftSize){
       output.set(k, left.get(i));
@@ -323,9 +290,11 @@ public class Index
       int i = 0;
 
       for(TaggedVertex vertex: unrankedMapW1.keySet()){
-        indicesHolder.put((String) vertex.getVertexData(), i);
-        combined.add(new Ranked(vertex.getTagValue(), unrankedMapW1.get(vertex), (String) vertex.getVertexData()));
-        i++;
+          indicesHolder.put((String) vertex.getVertexData(), i);
+          Ranked toInsert = new Ranked(vertex.getTagValue(), unrankedMapW1.get(vertex), (String) vertex.getVertexData());
+          toInsert.setWc2(0);
+          combined.add(toInsert);
+          i++;
       }
 
       for(TaggedVertex vertex: unrankedMapW2.keySet()){
@@ -334,9 +303,25 @@ public class Index
           combined.get(index).setWc2(unrankedMapW2.get(vertex));
         }
         else{
-          Ranked ranked = new Ranked(vertex.getTagValue(), 0, (String) vertex.getVertexData());
-          ranked.setWc2(unrankedMapW2.get(vertex));
-          combined.add(ranked);
+          Ranked toInsert = new Ranked(vertex.getTagValue(), 0, (String) vertex.getVertexData());
+          combined.add(toInsert);
+          toInsert.setWc2(unrankedMapW2.get(vertex));
+          indicesHolder.put((String) vertex.getVertexData(), i);
+          i++;
+        }
+      }
+      if(operators==Operators.AND) {
+        for (int k = combined.size() - 1; k >= 0; k--) {
+          if (combined.get(k).wc2 == 0 || combined.get(k).wc == 0) {
+            combined.remove(k);
+          }
+        }
+      }
+      else if(operators==Operators.NOT){
+        for (int k = combined.size() - 1; k >= 0; k--) {
+          if (combined.get(k).wc == 0 && combined.get(k).wc2 != 0) {
+            combined.remove(k);
+          }
         }
       }
     }

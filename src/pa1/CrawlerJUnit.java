@@ -404,6 +404,74 @@ public class CrawlerJUnit {
 
     }
 
+    @Test
+    public void searchORTest(){
+
+        TaggedVertex<String> a = new TaggedVertex<>("A", 2);
+        TaggedVertex<String> b = new TaggedVertex<>("B", 2);
+        TaggedVertex<String> c = new TaggedVertex<>("C", 2);
+        TaggedVertex<String> d = new TaggedVertex<>("D", 2);
+        TaggedVertex<String> e = new TaggedVertex<>("E", 1);
+        TaggedVertex<String> f = new TaggedVertex<>("F", 1);
+        TaggedVertex<String> g = new TaggedVertex<>("G", 1);
+        TaggedVertex<String> h = new TaggedVertex<>("H", 1);
+        TaggedVertex<String> i = new TaggedVertex<>("I", 1);
+        TaggedVertex<String> j = new TaggedVertex<>("J", 1);
+
+        ArrayList<TaggedVertex<String>> urls = new ArrayList<>(Arrays.asList(a,b,c,d,e,f,g,h,i,j));
+
+        Index testIndex = new Index(urls);
+        testIndex.jSoupAPI = jsoupMock;
+
+        when(jsoupMock.getBody(anyString())).thenAnswer(
+                (Answer<String>) invoc -> getFakeBody((String) invoc.getArguments()[0]));
+
+        testIndex.makeIndex();
+
+        List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(a,b,c,d,g,i,j,h));
+        List<TaggedVertex<String>> actual = testIndex.searchWithOr("bottle", "happy");
+
+        for(int index=0; index<expected.size(); index++){
+            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData()); //Should return f,g,i in that order
+        }
+
+    }
+
+    @Test
+    public void searchNOTTest(){
+
+        TaggedVertex<String> a = new TaggedVertex<>("A", 2);
+        TaggedVertex<String> b = new TaggedVertex<>("B", 2);
+        TaggedVertex<String> c = new TaggedVertex<>("C", 2);
+        TaggedVertex<String> d = new TaggedVertex<>("D", 2);
+        TaggedVertex<String> e = new TaggedVertex<>("E", 1);
+        TaggedVertex<String> f = new TaggedVertex<>("F", 1);
+        TaggedVertex<String> g = new TaggedVertex<>("G", 1);
+        TaggedVertex<String> h = new TaggedVertex<>("H", 1);
+        TaggedVertex<String> i = new TaggedVertex<>("I", 1);
+        TaggedVertex<String> j = new TaggedVertex<>("J", 1);
+
+        ArrayList<TaggedVertex<String>> urls = new ArrayList<>(Arrays.asList(a,b,c,d,e,f,g,h,i,j));
+
+        Index testIndex = new Index(urls);
+        testIndex.jSoupAPI = jsoupMock;
+
+        when(jsoupMock.getBody(anyString())).thenAnswer(
+                (Answer<String>) invoc -> getFakeBody((String) invoc.getArguments()[0]));
+
+        testIndex.makeIndex();
+
+        List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(a,b,c,f,d,g,i,j,h));
+        List<TaggedVertex<String>> actual = testIndex.searchAndNot("bottle", "happy");
+
+        for(int index=0; index<expected.size(); index++){
+            assertEquals(expected.get(index).getVertexData(), actual.get(index).getVertexData()); //Should return f,g,i in that order
+        }
+
+    }
+
+
+
     /**
      * Hacky for loop to return our fake internet links.
      * Given a 'url', return a list of all outgoing urls.
