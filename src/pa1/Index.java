@@ -275,8 +275,8 @@ public class Index
   }
 
   private List<TaggedVertex<String>> twoWords(String w1, String w2, Operators operators){
-    HashMap<TaggedVertex, Integer> unrankedMapW1 = list.get(w1);
-    HashMap<TaggedVertex, Integer> unrankedMapW2 = list.get(w2);
+    HashMap<TaggedVertex, Integer> unrankedMapW1 = list.get(Util.stripPunctuation(w1));
+    HashMap<TaggedVertex, Integer> unrankedMapW2 = list.get(Util.stripPunctuation(w2));
 
     HashMap<String, Integer> indicesHolder = new HashMap<>();
     List<Ranked> combined = new ArrayList<>();

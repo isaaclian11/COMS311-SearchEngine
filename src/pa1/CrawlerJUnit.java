@@ -198,7 +198,7 @@ public class CrawlerJUnit {
     }
 
     @Test
-    public void vertedDataTest() throws IOException {
+    public void vertexdDataTest() throws IOException {
         String seed = "A";
         Crawler crawler = new Crawler(seed, 4, 6);
         crawler.jSoupAPI = jsoupMock;
@@ -212,7 +212,7 @@ public class CrawlerJUnit {
 
         actual = graph.vertexDataWithIncomingCounts();
 
-        TaggedVertex<String> a = new TaggedVertex<>("A", 1);
+        TaggedVertex<String> a = new TaggedVertex<>("A", 2);
         TaggedVertex<String> b = new TaggedVertex<>("B", 2);
         TaggedVertex<String> c = new TaggedVertex<>("C", 2);
         TaggedVertex<String> d = new TaggedVertex<>("D", 2);
@@ -245,7 +245,7 @@ public class CrawlerJUnit {
 
         actual = graph.vertexDataWithIncomingCounts();
 
-        TaggedVertex<String> a = new TaggedVertex<>("A", 2);
+        TaggedVertex<String> a = new TaggedVertex<>("A", 3);
         TaggedVertex<String> b = new TaggedVertex<>("B", 2);
         TaggedVertex<String> c = new TaggedVertex<>("C", 2);
         TaggedVertex<String> d = new TaggedVertex<>("D", 2);
@@ -271,7 +271,7 @@ public class CrawlerJUnit {
     @Test
     public void searchTest(){
 
-        TaggedVertex<String> a = new TaggedVertex<>("A", 2);
+        TaggedVertex<String> a = new TaggedVertex<>("A", 3);
         TaggedVertex<String> b = new TaggedVertex<>("B", 2);
         TaggedVertex<String> c = new TaggedVertex<>("C", 2);
         TaggedVertex<String> d = new TaggedVertex<>("D", 2);
@@ -306,7 +306,7 @@ public class CrawlerJUnit {
     @Test
     public void searchTest2(){
 
-        TaggedVertex<String> a = new TaggedVertex<>("A", 0);
+        TaggedVertex<String> a = new TaggedVertex<>("A", 1);
 
         ArrayList<TaggedVertex<String>> urls = new ArrayList<>(Arrays.asList(a));
 
@@ -355,7 +355,7 @@ public class CrawlerJUnit {
 
         testIndex.makeIndex();
 
-        TaggedVertex<String> a = new TaggedVertex<>("A", 2);
+        TaggedVertex<String> a = new TaggedVertex<>("A", 3);
         TaggedVertex<String> b = new TaggedVertex<>("B", 2);
         TaggedVertex<String> c = new TaggedVertex<>("C", 2);
         TaggedVertex<String> d = new TaggedVertex<>("D", 2);
@@ -433,7 +433,7 @@ public class CrawlerJUnit {
 
         testIndex.makeIndex();
 
-        List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(a,b,c,d,g,i,j,h));
+        List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(a,b,c,f,d,g,i,j,h));
         List<TaggedVertex<String>> actual = testIndex.searchWithOr("bottle", "happy");
 
         //Should return a,b,c,d,g,i,j,h in that order
@@ -476,6 +476,56 @@ public class CrawlerJUnit {
 
     }
 
+    @Test
+    public void testSearch(){
+        String seed = "http://web.cs.iastate.edu/~smkautz/cs311f19/temp/a.html";
+        Crawler crawler = new Crawler(seed, 4, 25);
+        Graph<String> graph = crawler.crawl();
+
+        List<TaggedVertex<String>> urls = graph.vertexDataWithIncomingCounts();
+        Index index = new Index(urls);
+        index.makeIndex();
+
+        List<TaggedVertex<String>> actual = index.search("link");
+
+        TaggedVertex<String> a = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/a.html", 9);
+        TaggedVertex<String> c = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/c.html", 8);
+        TaggedVertex<String> b = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/b.html", 6);
+        TaggedVertex<String> d = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/d.html", 6);
+        TaggedVertex<String> e = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/e.html", 1);
+
+        List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(a,c,b,d,e));
+
+        for(int i=0; i<expected.size(); i++){
+            assertEquals(expected.get(i).getVertexData(), actual.get(i).getVertexData());
+        }
+
+    }
+
+    @Test
+    public void testSearch2(){
+        String seed = "http://web.cs.iastate.edu/~smkautz/cs311f19/temp/a.html";
+        Crawler crawler = new Crawler(seed, 4, 25);
+        Graph<String> graph = crawler.crawl();
+
+        List<TaggedVertex<String>> urls = graph.vertexDataWithIncomingCounts();
+        Index index = new Index(urls);
+        index.makeIndex();
+
+        List<TaggedVertex<String>> actual = index.searchWithAnd("link", "Chicken");
+
+        TaggedVertex<String> a = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/a.html", 9);
+        TaggedVertex<String> c = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/c.html", 8);
+        TaggedVertex<String> e = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/e.html", 1);
+
+        List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(c,a,e));
+
+        for(int i=0; i<expected.size(); i++){
+            assertEquals(expected.get(i).getVertexData(), actual.get(i).getVertexData());
+        }
+
+
+    }
 
 
     /**

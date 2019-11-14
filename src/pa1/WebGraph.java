@@ -62,9 +62,8 @@ public class WebGraph implements Graph {
             if(incoming.get(i).size()>0) {
                 Object data = incoming.get(i).get(0).getVertexData();
                 int value = incoming.get(i).size() - 1;
-                if(i==0 && value==0){
-                    value = 1;
-                }
+                if(i==0)
+                    value = incoming.get(i).size();
                 TaggedVertex vertex = new TaggedVertex(data, value);
                 list.add(vertex);
             }
