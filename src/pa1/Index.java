@@ -18,9 +18,11 @@ public class Index
 {
 
   List<TaggedVertex<String>> urls;
-  HashMap<String, HashMap<TaggedVertex, Integer>> list = new HashMap<>();
-  HashMap<String, List<TaggedVertex<String>>> memo = new HashMap<>();
-  HashMap<String, HashMap<String,List<Ranked>>> rankedMemo = new HashMap<>();
+  HashMap<String, HashMap<TaggedVertex, Integer>> list;
+  HashMap<String, List<TaggedVertex<String>>> memo;
+  HashMap<String, HashMap<String,List<Ranked>>> andMemo;
+  HashMap<String, HashMap<String,List<Ranked>>> orMemo;
+  HashMap<String, HashMap<String,List<Ranked>>> notMemo;
   JSoupAPI jSoupAPI;
 
   /**
@@ -34,6 +36,11 @@ public class Index
   {
     this.urls = urls;
     jSoupAPI = new JSoupAPI();
+    list = new HashMap<>();
+    memo = new HashMap<>();
+    andMemo = new HashMap<>();
+    orMemo = new HashMap<>();
+    notMemo = new HashMap<>();
   }
   
   /**
@@ -102,7 +109,7 @@ public class Index
     mergeSort(unrankedList, 0, unrankedList.size()-1, Operators.NONE);
     List<TaggedVertex<String>> output = new ArrayList<>();
     for(int i=0; i<unrankedList.size(); i++){
-      output.add(new TaggedVertex<>(unrankedList.get(i).page, i));
+      output.add(new TaggedVertex<>(unrankedList.get(i).page, unrankedList.get(i).rank));
     }
     memo.put(w, output);
     return output;
@@ -205,45 +212,63 @@ public class Index
 
     if(operator==Operators.NONE || operator==Operators.NOT) {
       while (i < leftSize && j < rightSize) {
-        if (left.get(i).indegrees * left.get(i).wc >= right.get(j).indegrees * right.get(j).wc) {
+        int leftRank = left.get(i).indegrees * left.get(i).wc;
+        int rightRank = right.get(j).indegrees * right.get(j).wc;
+        if (leftRank >= rightRank) {
+          left.get(i).setRank(leftRank);
           output.set(k, left.get(i));
           i++;
         } else {
+          right.get(i).setRank(rightRank);
           output.set(k, right.get(j));
           j++;
         }
         k++;
       }
       while(i<leftSize){
+        int rank = left.get(i).indegrees*left.get(i).wc;
+        left.get(i).setRank(rank);
         output.set(k, left.get(i));
         i++;
         k++;
       }
       while(j<rightSize){
+        int rank = right.get(j).indegrees*right.get(j).wc;
+        right.get(j).setRank(rank);
         output.set(k, right.get(j));
         j++;
         k++;
       }
     }
     else if(operator==Operators.AND || operator==Operators.OR){
+
       while (i < leftSize && j < rightSize) {
-        if(left.get(i).indegrees*left.get(i).wc + left.get(i).indegrees*left.get(i).wc2 >=
-                right.get(j).indegrees*right.get(j).wc + right.get(j).indegrees*right.get(j).wc2){
+
+        int leftRank = left.get(i).indegrees*left.get(i).wc + left.get(i).indegrees*left.get(i).wc2;
+        int rightRank = right.get(j).indegrees*right.get(j).wc + right.get(j).indegrees*right.get(j).wc2;
+
+        if(leftRank >= rightRank){
+          left.get(i).setRank(leftRank);
           output.set(k, left.get(i));
           i++;
         }
         else{
+          right.get(i).setRank(rightRank);
           output.set(k, right.get(j));
           j++;
         }
         k++;
       }
       while(i<leftSize){
+        int rank = left.get(i).indegrees*left.get(i).wc + left.get(i).indegrees*left.get(i).wc2;
+        left.get(i).setRank(rank);
         output.set(k, left.get(i));
         i++;
         k++;
       }
       while(j<rightSize){
+        int rank = right.get(j).indegrees*right.get(j).wc + right.get(j).indegrees*right.get(j).wc2;
+        right.get(j).setRank(rank);
         output.set(k, right.get(j));
         j++;
         k++;
@@ -258,10 +283,14 @@ public class Index
     HashMap<String, Integer> indicesHolder = new HashMap<>();
     List<Ranked> combined = new ArrayList<>();
 
-    if(rankedMemo.containsKey(w1)){
-      if(rankedMemo.get(w1).containsKey(w2)){
-        combined = rankedMemo.get(w1).get(w2);
-      }
+    if(operators==Operators.AND && andMemo.containsKey(Util.stripPunctuation(w1))){
+        combined = andMemo.get(Util.stripPunctuation(w1)).get(Util.stripPunctuation(w2));
+    }
+    else if(operators==Operators.OR && orMemo.containsKey(Util.stripPunctuation(w1))){
+        combined = orMemo.get(Util.stripPunctuation(w1)).get(Util.stripPunctuation(w2));
+    }
+    else if(operators==Operators.NOT && notMemo.containsKey(Util.stripPunctuation(w1))){
+        combined = notMemo.get(Util.stripPunctuation(w1)).get(Util.stripPunctuation(w2));
     }
     else{
       int i = 0;
@@ -301,16 +330,20 @@ public class Index
           }
         }
       }
+      mergeSort(combined, 0, combined.size()-1, operators);
+      HashMap<String, List<Ranked>> ranked = new HashMap<>();
+      ranked.put(Util.stripPunctuation(w2), combined);
+      if(operators==Operators.AND)
+        andMemo.put(Util.stripPunctuation(w1), ranked);
+      else if(operators==Operators.OR)
+        orMemo.put(Util.stripPunctuation(w1), ranked);
+      else
+        notMemo.put(w1, ranked);
     }
-    mergeSort(combined, 0, combined.size()-1, operators);
-
-    HashMap<String, List<Ranked>> ranked = new HashMap<>();
-    ranked.put(w2, combined);
-    rankedMemo.put(w1, ranked);
 
     List<TaggedVertex<String>> output = new ArrayList<>();
     for(int i=0; i<combined.size(); i++){
-      output.add(new TaggedVertex<>(combined.get(i).page, i));
+      output.add(new TaggedVertex<>(combined.get(i).page, combined.get(i).rank));
     }
     return output;
   }
@@ -320,6 +353,7 @@ public class Index
     int wc;
     String page;
     int wc2;
+    int rank;
 
     public Ranked(int indegrees, int wc, String page) {
       this.indegrees = indegrees;
@@ -331,9 +365,11 @@ public class Index
       this.wc2 = wc2;
     }
 
+    public void setRank(int rank){
+      this.rank = rank;
+    }
+
   }
-
-
 
   private enum Operators{
     NONE,

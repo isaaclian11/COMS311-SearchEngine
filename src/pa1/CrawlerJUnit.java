@@ -498,6 +498,7 @@ public class CrawlerJUnit {
 
         for(int i=0; i<expected.size(); i++){
             assertEquals(expected.get(i).getVertexData(), actual.get(i).getVertexData());
+            assertEquals(expected.get(i).getTagValue(), actual.get(i).getTagValue());
         }
 
     }
@@ -514,14 +515,16 @@ public class CrawlerJUnit {
 
         List<TaggedVertex<String>> actual = index.searchWithAnd("link", "Chicken");
 
-        TaggedVertex<String> a = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/a.html", 9);
-        TaggedVertex<String> c = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/c.html", 8);
-        TaggedVertex<String> e = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/e.html", 1);
+        TaggedVertex<String> a = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/a.html", 12);
+        TaggedVertex<String> c = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/c.html", 18);
+        TaggedVertex<String> e = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/e.html", 2);
 
         List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(c,a,e));
 
         for(int i=0; i<expected.size(); i++){
             assertEquals(expected.get(i).getVertexData(), actual.get(i).getVertexData());
+            assertEquals(expected.get(i).getTagValue(), actual.get(i).getTagValue());
+
         }
     }
 
@@ -535,14 +538,15 @@ public class CrawlerJUnit {
         Index index = new Index(urls);
         index.makeIndex();
 
+        List<TaggedVertex<String>> first = index.searchWithOr("link", "souP");
         List<TaggedVertex<String>> actual = index.searchWithOr("link", "souP");
 
         TaggedVertex<String> a = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/a.html", 9);
         TaggedVertex<String> c = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/c.html", 8);
-        TaggedVertex<String> g = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/g.html", 8);
+        TaggedVertex<String> g = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/g.html", 7);
         TaggedVertex<String> b = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/b.html", 6);
         TaggedVertex<String> d = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/d.html", 6);
-        TaggedVertex<String> e = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/e.html", 1);
+        TaggedVertex<String> e = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/e.html", 2);
         TaggedVertex<String> i_ = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/j.html", 1);
         TaggedVertex<String> j = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/i.html", 1);
 
@@ -551,6 +555,8 @@ public class CrawlerJUnit {
 
         for(int i=0; i<expected.size(); i++){
             assertEquals(expected.get(i).getVertexData(), actual.get(i).getVertexData());
+            assertEquals(expected.get(i).getTagValue(), actual.get(i).getTagValue());
+
         }
     }
 
@@ -565,8 +571,9 @@ public class CrawlerJUnit {
         index.makeIndex();
 
         List<TaggedVertex<String>> actual = index.searchAndNot("soup", "link");
+        actual = index.searchAndNot("soup", "link");
 
-        TaggedVertex<String> g = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/g.html", 8);
+        TaggedVertex<String> g = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/g.html", 7);
         TaggedVertex<String> i_ = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/i.html", 1);
         TaggedVertex<String> j = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/j.html", 1);
 
@@ -575,6 +582,7 @@ public class CrawlerJUnit {
 
         for(int i=0; i<expected.size(); i++){
             assertEquals(expected.get(i).getVertexData(), actual.get(i).getVertexData());
+            assertEquals(expected.get(i).getTagValue(), actual.get(i).getTagValue());
         }
     }
 
