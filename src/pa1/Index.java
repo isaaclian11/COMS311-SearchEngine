@@ -203,7 +203,7 @@ public class Index
     j = 0;
     k = start;
 
-    if(operator==Operators.NONE) {
+    if(operator==Operators.NONE || operator==Operators.NOT) {
       while (i < leftSize && j < rightSize) {
         if (left.get(i).indegrees * left.get(i).wc >= right.get(j).indegrees * right.get(j).wc) {
           output.set(k, left.get(i));
@@ -248,29 +248,6 @@ public class Index
         j++;
         k++;
       }
-    }
-    else if(operator==Operators.NOT){
-      while (i < leftSize && j < rightSize) {
-        if(left.get(i).indegrees*left.get(i).wc >= right.get(j).indegrees*right.get(j).wc){
-          output.set(k, left.get(i));
-          i++;
-        }
-        else{
-          output.set(k, right.get(j));
-          j++;
-        }
-      }
-      k++;
-    }
-    while(i<leftSize){
-      output.set(k, left.get(i));
-      i++;
-      k++;
-    }
-    while(j<rightSize){
-      output.set(k, right.get(j));
-      j++;
-      k++;
     }
   }
 

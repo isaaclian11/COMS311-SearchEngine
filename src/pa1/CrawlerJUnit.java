@@ -523,8 +523,59 @@ public class CrawlerJUnit {
         for(int i=0; i<expected.size(); i++){
             assertEquals(expected.get(i).getVertexData(), actual.get(i).getVertexData());
         }
+    }
+
+    @Test
+    public void testSearch3(){
+        String seed = "http://web.cs.iastate.edu/~smkautz/cs311f19/temp/a.html";
+        Crawler crawler = new Crawler(seed, 4, 25);
+        Graph<String> graph = crawler.crawl();
+
+        List<TaggedVertex<String>> urls = graph.vertexDataWithIncomingCounts();
+        Index index = new Index(urls);
+        index.makeIndex();
+
+        List<TaggedVertex<String>> actual = index.searchWithOr("link", "souP");
+
+        TaggedVertex<String> a = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/a.html", 9);
+        TaggedVertex<String> c = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/c.html", 8);
+        TaggedVertex<String> g = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/g.html", 8);
+        TaggedVertex<String> b = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/b.html", 6);
+        TaggedVertex<String> d = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/d.html", 6);
+        TaggedVertex<String> e = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/e.html", 1);
+        TaggedVertex<String> i_ = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/j.html", 1);
+        TaggedVertex<String> j = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/i.html", 1);
 
 
+        List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(a,c,g,b,d,e,i_,j));
+
+        for(int i=0; i<expected.size(); i++){
+            assertEquals(expected.get(i).getVertexData(), actual.get(i).getVertexData());
+        }
+    }
+
+    @Test
+    public void testSearch4(){
+        String seed = "http://web.cs.iastate.edu/~smkautz/cs311f19/temp/a.html";
+        Crawler crawler = new Crawler(seed, 4, 25);
+        Graph<String> graph = crawler.crawl();
+
+        List<TaggedVertex<String>> urls = graph.vertexDataWithIncomingCounts();
+        Index index = new Index(urls);
+        index.makeIndex();
+
+        List<TaggedVertex<String>> actual = index.searchAndNot("soup", "link");
+
+        TaggedVertex<String> g = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/g.html", 8);
+        TaggedVertex<String> i_ = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/i.html", 1);
+        TaggedVertex<String> j = new TaggedVertex<>("http://web.cs.iastate.edu/~smkautz/cs311f19/temp/j.html", 1);
+
+
+        List<TaggedVertex<String>> expected = new ArrayList<>(Arrays.asList(g,j,i_));
+
+        for(int i=0; i<expected.size(); i++){
+            assertEquals(expected.get(i).getVertexData(), actual.get(i).getVertexData());
+        }
     }
 
 
