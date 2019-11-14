@@ -92,7 +92,7 @@ public class CrawlerJUnit {
         ));
 
         //Replace normal JSoupAPI calls to actual webpages with our fake stuff below
-        when(jsoupMock.getLinks(anyString(), any(PolitenessPolicy.class))).thenAnswer(
+        when(jsoupMock.getLinks(anyString())).thenAnswer(
                 (Answer<String[]>) invoc -> getFakeLinkLists((String) invoc.getArguments()[0]));
 
         Graph<String> graph = crawler.crawl();
@@ -153,7 +153,7 @@ public class CrawlerJUnit {
         ));
 
         //Replace normal JSoupAPI calls to actual webpages with our fake stuff below
-        when(jsoupMock.getLinks(anyString(), any(PolitenessPolicy.class))).thenAnswer(
+        when(jsoupMock.getLinks(anyString())).thenAnswer(
                 (Answer<String[]>) invoc -> getFakeLinkLists((String) invoc.getArguments()[0]));
 
         Graph<String> graph = crawler.crawl();
@@ -196,7 +196,7 @@ public class CrawlerJUnit {
         Crawler crawler = new Crawler(seed, 4, 6);
         crawler.jSoupAPI = jsoupMock;
 
-        when(jsoupMock.getLinks(anyString(), any(PolitenessPolicy.class))).thenAnswer(
+        when(jsoupMock.getLinks(anyString())).thenAnswer(
                 (Answer<String[]>) invoc -> getFakeLinkLists((String) invoc.getArguments()[0]));
 
         Graph<String> graph = crawler.crawl();
@@ -228,7 +228,7 @@ public class CrawlerJUnit {
         Crawler crawler = new Crawler(seed, 4, 12);
         crawler.jSoupAPI = jsoupMock;
 
-        when(jsoupMock.getLinks(anyString(), any(PolitenessPolicy.class))).thenAnswer(
+        when(jsoupMock.getLinks(anyString())).thenAnswer(
                 (Answer<String[]>) invoc -> getFakeLinkLists((String) invoc.getArguments()[0]));
 
         Graph<String> graph = crawler.crawl();

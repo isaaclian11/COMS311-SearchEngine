@@ -64,7 +64,6 @@ public class Crawler
 
     int count = 1;
     int layer = 0;
-    int requestCount = 0;
 
     while(!queue.isEmpty() && layer<=maxDepth) {
       String url = queue.poll();
@@ -76,17 +75,8 @@ public class Crawler
         else
           continue;
       } else{
-        if (requestCount >= 50) {
-          requestCount = 0;
-          try {
-            Thread.sleep(3000);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-        }
-        requestCount++;
         TaggedVertex parent = new TaggedVertex(url, visited.get(url));
-        String[] links = jSoupAPI.getLinks(url, new PolitenessPolicy());
+        String[] links = jSoupAPI.getLinks(url);
         for (String v : links) {
           TaggedVertex vertex = new TaggedVertex(v, count);
           if (!visited.containsKey(v) && count != maxPages && layer < maxDepth) {

@@ -9,10 +9,23 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 
 public class JSoupAPI {
-    public String[] getLinks(String url, PolitenessPolicy politenessPolicy){
+
+    int requestCount = 0;
+
+    public String[] getLinks(String url){
+
+        if (requestCount >= 50) {
+            requestCount = 0;
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         Document doc = null;
         try {
             doc = Jsoup.connect(url).get();
+            requestCount++;
         }
         catch (UnsupportedMimeTypeException e)
         {
@@ -34,9 +47,19 @@ public class JSoupAPI {
     }
 
     public String getBody(String url){
+        if (requestCount >= 50) {
+            requestCount = 0;
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        requestCount++;
         String body = null;
         try {
             body = Jsoup.connect(url).get().body().text();
+            requestCount++;
         } catch (IOException e) {
             e.printStackTrace();
         }

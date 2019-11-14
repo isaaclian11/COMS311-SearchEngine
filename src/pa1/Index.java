@@ -1,6 +1,5 @@
 package pa1;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,7 +7,6 @@ import java.util.Scanner;
 
 import api.TaggedVertex;
 import api.Util;
-import org.jsoup.Jsoup;
 
 
 /**
