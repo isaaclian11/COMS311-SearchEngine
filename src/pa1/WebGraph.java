@@ -7,50 +7,62 @@ import java.util.*;
 
 public class WebGraph implements Graph {
 
-    private HashMap<Integer, ArrayList<TaggedVertex>> adjList = new HashMap<>();
-    private HashMap<Integer, ArrayList<TaggedVertex>> incoming = new HashMap<>();
-    private HashSet<Integer> vertices = new HashSet<>();
+    private HashMap<Integer, List<Integer>> adjList;
+    private HashMap<Integer, List<Integer>> incoming;
+    private HashMap<Integer, TaggedVertex> vertexData;
 
     public WebGraph(int size){
-        for(int i=0; i<size; i++){
-            adjList.put(i, new ArrayList<>());
-            incoming.put(i, new ArrayList<>());
-        }
+        adjList = new HashMap<>();
+        incoming = new HashMap<>();
+        vertexData = new HashMap<>();
     }
 
     public void addEdge(TaggedVertex start, TaggedVertex end){
-        if(start.getTagValue()>=adjList.size() || end.getTagValue()>=adjList.size()){
-            return;
-        }
-        if(!vertices.contains(start.getTagValue())) {
-            ArrayList adj = adjList.get(start.getTagValue());
-            ArrayList in = incoming.get(start.getTagValue());
-            adj.add(start);
-            in.add(start);
+        if(!vertexData.containsKey(start.getTagValue())) {
+            List<Integer> adj = adjList.get(start.getTagValue());
+            List<Integer> in = incoming.get(start.getTagValue());
+            if(adj==null) {
+                adj = new ArrayList();
+                adjList.put(start.getTagValue(), adj);
+            }
+            if(in==null) {
+                in = new ArrayList();
+                incoming.put(start.getTagValue(), in);
+            }
+            adj.add(start.getTagValue());
+            in.add(start.getTagValue());
+            vertexData.put(start.getTagValue(), start);
             adjList.replace(start.getTagValue(), adj);
             incoming.replace(start.getTagValue(), in);
-            vertices.add(start.getTagValue());
         }
-        if(!vertices.contains(end.getTagValue()) && start.getTagValue()!=end.getTagValue()) {
-            ArrayList adj = adjList.get(end.getTagValue());
-            ArrayList in = incoming.get(end.getTagValue());
+        if(!vertexData.containsKey(end.getTagValue()) && start.getTagValue()!=end.getTagValue()) {
+            List adj = adjList.get(end.getTagValue());
+            List in = incoming.get(end.getTagValue());
+            if(adj==null) {
+                adj = new ArrayList();
+                adjList.put(end.getTagValue(), adj);
+            }
+            if(in==null) {
+                in = new ArrayList();
+                incoming.put(end.getTagValue(), in);
+            }
             adj.add(end);
             in.add(end);
+            vertexData.put(end.getTagValue(), end);
             adjList.replace(end.getTagValue(), adj);
             incoming.replace(end.getTagValue(), in);
-            vertices.add(end.getTagValue());
         }
-        adjList.get(start.getTagValue()).add(end);
-        incoming.get(end.getTagValue()).add(start);
+        adjList.get(start.getTagValue()).add(end.getTagValue());
+        incoming.get(end.getTagValue()).add(start.getTagValue());
     }
 
 
     @Override
     public ArrayList vertexData() {
         ArrayList<Object> data = new ArrayList<>();
-        for(int i=0; i<adjList.size(); i++){
+        for(int i=0; i<vertexData.size(); i++){
             if(adjList.get(i).size()>0)
-             data.add(adjList.get(i).get(0).getVertexData());
+             data.add(vertexData.get(i).getVertexData());
         }
         return data;
     }
@@ -60,7 +72,7 @@ public class WebGraph implements Graph {
         ArrayList<TaggedVertex> list = new ArrayList<>();
         for(int i=0; i<incoming.size(); i++){
             if(incoming.get(i).size()>0) {
-                Object data = incoming.get(i).get(0).getVertexData();
+                Object data = vertexData.get(i).getVertexData();
                 int value = incoming.get(i).size() - 1;
                 if(i==0)
                     value = incoming.get(i).size();
@@ -76,11 +88,9 @@ public class WebGraph implements Graph {
         List<Integer> list = new ArrayList<>();
         if(adjList.get(index).size()==0)
             return list;
-        ArrayList<TaggedVertex> vertices = adjList.get(index);
-        for(int i=1; i<vertices.size(); i++){
-            list.add(vertices.get(i).getTagValue());
-        }
-        return list;
+        List<Integer> vertices = adjList.get(index);
+        vertices.remove(0);
+        return vertices;
     }
 
     @Override
@@ -88,10 +98,8 @@ public class WebGraph implements Graph {
         List<Integer> list = new ArrayList<>();
         if(incoming.get(index).size()<=1)
             return list;
-        ArrayList<TaggedVertex> vertices = incoming.get(index);
-        for(int i=1; i<vertices.size(); i++){
-            list.add(vertices.get(i).getTagValue());
-        }
-        return list;
+        List<Integer> vertices = incoming.get(index);
+        vertices.remove(0);
+        return vertices;
     }
 }
