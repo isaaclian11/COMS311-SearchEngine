@@ -52,8 +52,10 @@ public class WebGraph implements Graph {
             adjList.replace(end.getTagValue(), adj);
             incoming.replace(end.getTagValue(), in);
         }
-        adjList.get(start.getTagValue()).add(end.getTagValue());
-        incoming.get(end.getTagValue()).add(start.getTagValue());
+        if(!adjList.get(start.getTagValue()).contains(end.getTagValue()))
+            adjList.get(start.getTagValue()).add(end.getTagValue());
+        if(!incoming.get(end.getTagValue()).contains(start.getTagValue()))
+            incoming.get(end.getTagValue()).add(start.getTagValue());
     }
 
 
