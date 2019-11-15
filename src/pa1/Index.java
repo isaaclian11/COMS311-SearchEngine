@@ -101,8 +101,9 @@ public class Index
     if(memo.containsKey(w)){
       return memo.get(w);
     }
-    w = Util.stripPunctuation(w);
     HashMap<TaggedVertex, Integer> unrankedMap = list.get(w);
+    if(unrankedMap==null)
+      unrankedMap = new HashMap<>();
     List<Ranked> unrankedList = new ArrayList<>();
     for(TaggedVertex vertex: unrankedMap.keySet()){
       unrankedList.add(new Ranked(vertex.getTagValue(), unrankedMap.get(vertex), (String) vertex.getVertexData()));
@@ -278,20 +279,25 @@ public class Index
   }
 
   private List<TaggedVertex<String>> twoWords(String w1, String w2, Operators operators){
-    HashMap<TaggedVertex, Integer> unrankedMapW1 = list.get(Util.stripPunctuation(w1));
-    HashMap<TaggedVertex, Integer> unrankedMapW2 = list.get(Util.stripPunctuation(w2));
+    HashMap<TaggedVertex, Integer> unrankedMapW1 = list.get(w1);
+    HashMap<TaggedVertex, Integer> unrankedMapW2 = list.get(w2);
+
+    if(unrankedMapW1==null)
+      unrankedMapW1 = new HashMap<TaggedVertex, Integer>();
+    if(unrankedMapW2==null)
+      unrankedMapW2 = new HashMap<>();
 
     HashMap<String, Integer> indicesHolder = new HashMap<>();
     List<Ranked> combined = new ArrayList<>();
 
-    if(operators==Operators.AND && andMemo.containsKey(Util.stripPunctuation(w1))){
-        combined = andMemo.get(Util.stripPunctuation(w1)).get(Util.stripPunctuation(w2));
+    if(operators==Operators.AND && andMemo.containsKey(w1)){
+        combined = andMemo.get(w1).get(w2);
     }
-    else if(operators==Operators.OR && orMemo.containsKey(Util.stripPunctuation(w1))){
-        combined = orMemo.get(Util.stripPunctuation(w1)).get(Util.stripPunctuation(w2));
+    else if(operators==Operators.OR && orMemo.containsKey(w1)){
+        combined = orMemo.get(w1).get(w2);
     }
-    else if(operators==Operators.NOT && notMemo.containsKey(Util.stripPunctuation(w1))){
-        combined = notMemo.get(Util.stripPunctuation(w1)).get(Util.stripPunctuation(w2));
+    else if(operators==Operators.NOT && notMemo.containsKey(w1)){
+        combined = notMemo.get(w1).get(w2);
     }
     else{
       int i = 0;
@@ -333,11 +339,11 @@ public class Index
       }
       mergeSort(combined, 0, combined.size()-1, operators);
       HashMap<String, List<Ranked>> ranked = new HashMap<>();
-      ranked.put(Util.stripPunctuation(w2), combined);
+      ranked.put(w2, combined);
       if(operators==Operators.AND)
-        andMemo.put(Util.stripPunctuation(w1), ranked);
+        andMemo.put(w1, ranked);
       else if(operators==Operators.OR)
-        orMemo.put(Util.stripPunctuation(w1), ranked);
+        orMemo.put(w1, ranked);
       else
         notMemo.put(w1, ranked);
     }
