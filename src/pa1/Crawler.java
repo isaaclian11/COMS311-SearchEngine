@@ -19,7 +19,7 @@ public class Crawler
 {
   private String seedUrl;
   private int maxDepth, maxPages;
-  JSoupAPI jSoupAPI;
+  private JSoupAPI jSoupAPI;
   /**
    * Constructs a Crawler that will start with the given seed url, including
    * only up to maxPages pages at distance up to maxDepth from the seed url.
