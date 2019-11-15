@@ -17,13 +17,13 @@ import api.Util;
 public class Index
 {
 
-  List<TaggedVertex<String>> urls;
-  HashMap<String, HashMap<TaggedVertex, Integer>> list;
-  HashMap<String, List<TaggedVertex<String>>> memo;
-  HashMap<String, HashMap<String,List<Ranked>>> andMemo;
-  HashMap<String, HashMap<String,List<Ranked>>> orMemo;
-  HashMap<String, HashMap<String,List<Ranked>>> notMemo;
-  JSoupAPI jSoupAPI;
+  private List<TaggedVertex<String>> urls;
+  private HashMap<String, HashMap<TaggedVertex, Integer>> list;
+  private HashMap<String, List<TaggedVertex<String>>> memo;
+  private HashMap<String, HashMap<String,List<Ranked>>> andMemo;
+  private HashMap<String, HashMap<String,List<Ranked>>> orMemo;
+  private HashMap<String, HashMap<String,List<Ranked>>> notMemo;
+  private JSoupAPI jSoupAPI;
 
   /**
    * Constructs an index from the given list of urls.  The
@@ -42,6 +42,7 @@ public class Index
     orMemo = new HashMap<>();
     notMemo = new HashMap<>();
   }
+
   
   /**
    * Creates the index.
@@ -184,7 +185,7 @@ public class Index
     return twoWords(w1, w2, Operators.NOT);
   }
 
-  public void mergeSort(List<Ranked> output, int start,  int end, Operators operator){
+  private void mergeSort(List<Ranked> output, int start,  int end, Operators operator){
     if(start<end){
       int middle = start+(end-start)/2;
       mergeSort(output, start, middle, operator);
@@ -193,7 +194,7 @@ public class Index
     }
   }
 
-  public void merge(List<Ranked> output, int start, int middle, int end, Operators operator){
+  private void merge(List<Ranked> output, int start, int middle, int end, Operators operator){
     int i,j,k;
     int leftSize = middle - start + 1;
     int rightSize = end - middle;
@@ -219,7 +220,7 @@ public class Index
           output.set(k, left.get(i));
           i++;
         } else {
-          right.get(i).setRank(rightRank);
+          right.get(j).setRank(rightRank);
           output.set(k, right.get(j));
           j++;
         }
@@ -355,17 +356,17 @@ public class Index
     int wc2;
     int rank;
 
-    public Ranked(int indegrees, int wc, String page) {
+    private Ranked(int indegrees, int wc, String page) {
       this.indegrees = indegrees;
       this.wc = wc;
       this.page = page;
     }
 
-    public void setWc2(int wc2){
+    private void setWc2(int wc2){
       this.wc2 = wc2;
     }
 
-    public void setRank(int rank){
+    private void setRank(int rank){
       this.rank = rank;
     }
 

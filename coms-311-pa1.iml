@@ -19,5 +19,15 @@
     </orderEntry>
     <orderEntry type="library" name="mockito-all-1.10.19" level="project" />
     <orderEntry type="library" name="jsoup-1.12.1" level="project" />
+    <orderEntry type="module-library" scope="TEST">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../speccheck_pa1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="speccheck_pa1" level="project" />
   </component>
 </module>
