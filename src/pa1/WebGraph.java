@@ -89,7 +89,8 @@ public class WebGraph implements Graph {
         if(adjList.get(index).size()==0)
             return list;
         List<Integer> vertices = adjList.get(index);
-        vertices.remove(0);
+        if(vertices.size()>=1)
+            vertices.remove(0);
         return vertices;
     }
 
@@ -99,7 +100,8 @@ public class WebGraph implements Graph {
         if(incoming.get(index).size()<=1)
             return list;
         List<Integer> vertices = incoming.get(index);
-        vertices.remove(0);
+        if(vertices.size()>=1)
+            vertices.remove(0);
         return vertices;
     }
 }
