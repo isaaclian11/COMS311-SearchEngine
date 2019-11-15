@@ -113,7 +113,8 @@ public class Index
     for(int i=0; i<unrankedList.size(); i++){
       output.add(new TaggedVertex<>(unrankedList.get(i).page, unrankedList.get(i).rank));
     }
-    memo.put(w, output);
+    if(output.size()>0)
+      memo.put(w, output);
     return output;
   }
 
@@ -340,11 +341,11 @@ public class Index
       mergeSort(combined, 0, combined.size()-1, operators);
       HashMap<String, List<Ranked>> ranked = new HashMap<>();
       ranked.put(w2, combined);
-      if(operators==Operators.AND)
+      if(operators==Operators.AND && combined.size()>0)
         andMemo.put(w1, ranked);
-      else if(operators==Operators.OR)
+      else if(operators==Operators.OR && combined.size()>0)
         orMemo.put(w1, ranked);
-      else
+      else if(operators==Operators.NOT && combined.size()>0)
         notMemo.put(w1, ranked);
     }
 
