@@ -256,7 +256,7 @@ public class Index
           i++;
         }
         else{
-          right.get(i).setRank(rightRank);
+          right.get(j).setRank(rightRank);
           output.set(k, right.get(j));
           j++;
         }
